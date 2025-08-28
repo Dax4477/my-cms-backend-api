@@ -2,7 +2,7 @@
 
 // These lines import necessary libraries for your server.
 const express = require('express'); // 'express' helps build web servers easily.
-const cors = require('cors');     // 'cors' allows your frontend to talk to this backend.
+const cors = require('cors');       // 'cors' allows your frontend to talk to this backend.
 const admin = require('firebase-admin'); // 'firebase-admin' allows this server to access your Firebase project.
 
 // ------------------------------------------------------------------------------------------
@@ -42,9 +42,14 @@ admin.initializeApp({
 
 // Get a reference to your Firestore database.
 const db = admin.firestore();
+
+// IMPORTANT: This 'appId' variable MUST match the 'appId' string used in your frontend's Firestore paths.
+// For local development, this is 'default-app-id'. For Canvas deployment, it would use __app_id.
+const appId = 'default-app-id'; // <--- NEWLY DEFINED APPID FOR BACKEND FIRESTORE PATHS
+
 const app = express(); // Create an Express application instance.
 const port = process.env.PORT || 3000; // Define the port your server will listen on.
-                                    // Use Render's assigned port (process.env.PORT) or 3000 locally.
+                                     // Use Render's assigned port (process.env.PORT) or 3000 locally.
 
 // Enable Cross-Origin Resource Sharing (CORS) for all routes.
 // This is necessary for your frontend (React app) to communicate with your backend,
@@ -88,6 +93,7 @@ app.post('/api/upload-media', async (req, res) => {
       
       // Add the media item to Firestore immediately with a "processing" status.
       // The `add()` method generates a unique ID for the new document.
+      // Uses the defined 'appId' variable here.
       const mediaCollectionRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('media');
       const mediaDocRef = await mediaCollectionRef.add(newMedia);
       
@@ -107,11 +113,12 @@ app.post('/api/upload-media', async (req, res) => {
       }, 5000); // 5-second simulated delay for processing
     } else {
       // If it's an image or a video without specific length, save it directly as complete.
+      // Uses the defined 'appId' variable here.
       const mediaCollectionRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('media');
       await mediaCollectionRef.add({
-          ...newMedia,
-          processed: true,
-          processingStatus: 'complete'
+        ...newMedia,
+        processed: true,
+        processingStatus: 'complete'
       });
       console.log(`Media for user ${userId} saved to Firestore.`);
     }
